@@ -25,6 +25,14 @@ To use the custom contact form, follow these steps:
    ```config.ini
    [api_key]
    HUBSPOT_API_KEY=your_hubspot_api_key
+   USERNAME=<youremail@gmail.com>
+   PASSWORD=SMTP_PASSWORD
+   HOST=<SMTP HOST>
+   PORT=PORT
    ```
 
    Replace `your_hubspot_api_key` with your actual HubSpot API key.</s>
+   Replace `<youremail@gmail.com>` with your actual Email.</s>
+   Replace `SMTP_PASSWORD` with your password.</s>
+   Replace `SMTP HOST` with your SMTP Host</s>
+   Replace `PORT` with the port</s>

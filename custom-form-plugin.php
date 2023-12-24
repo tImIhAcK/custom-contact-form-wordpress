@@ -54,7 +54,7 @@ function custom_contact_form_settings()
 
 // ...
 
-function custom_contact_form($firstname, $lastname, $email, $subject, $message)
+function custom_contact_form($form_data)
 {
     echo '
     
@@ -63,35 +63,36 @@ function custom_contact_form($firstname, $lastname, $email, $subject, $message)
         <form action="' . $_SERVER['REQUEST_URI'] . '" method="post">
             <input type="hidden" name="action" value="my_custom_form_submit">
             <label for="first_name">' . esc_html__('First Name:', 'custom-contact-form') . '</label>
-            <input type="text" id="first_name" name="firstname" value="' . esc_attr(isset($_POST['firstname']) ? $firstname : null) . '">
+            <input type="text" id="first_name" name="firstname" value="' . esc_attr(isset($_POST['firstname']) ? $form_data['firstname'] : null) . '">
             <br>
             <label for="last_name">' . esc_html__('Last Name:', 'custom-contact-form') . '</label>
-            <input type="text" id="last_name" name="lastname" value="' . esc_attr(isset($_POST['lastname']) ? $lastname : null) . '">
+            <input type="text" id="last_name" name="lastname" value="' . esc_attr(isset($_POST['lastname']) ? $form_data['lastname'] : null) . '">
             <br>
             <label for="email">' . esc_html__('E-mail:', 'custom-contact-form') . '</label>
-            <input type="text" id="email" name="email" value="' . esc_attr(isset($_POST['email']) ? $email : null) . '">
+            <input type="text" id="email" name="email" value="' . esc_attr(isset($_POST['email']) ? $form_data['email'] : null) . '">
             <br>
             <label for="subject">' . esc_html__('Subject:', 'custom-contact-form') . '</label>
-            <input type="text" id="subject" name="subject" value="' . esc_attr(isset($_POST['subject']) ? $subject : null) . '">
+            <input type="text" id="subject" name="subject" value="' . esc_attr(isset($_POST['subject']) ? $form_data['subject'] : null) . '">
             <br>
             <label for="message">' . esc_html__('Message:', 'custom-contact-form') . '</label>
-            <textarea id="message" name="message">' . esc_textarea(isset($_POST['message']) ? $message : null) . '</textarea>
+            <textarea id="message" name="message">' . esc_textarea(isset($_POST['message']) ? $form_data['message'] : null) . '</textarea>
             <br>
            <button type="submit" name="submit">' . esc_html__('Submit', 'custom-contact-form') . '</button>
         </form>
     </div>';
 }
+// Add Ajax to hanble the form
 
 
 // INput validation function 
-function custom_contact_form_validation($firstname, $lastname, $email, $subject, $message)
+function custom_contact_form_validation($form_data)
 {
     $form_errors = new WP_Error;
 
-    if (empty($firstname) || empty($lastname) || empty($email) || empty($subject) || empty($message)) {
+    if (empty($form_data['firstname']) || empty($form_data['lastname']) || empty($form_data['email']) || empty($form_data['subject']) || empty($form_data['message'])) {
         $form_errors->add('field', __('All fields are required', 'custom-contact-form'));
     }
-    if (!is_email($email)) {
+    if (!is_email($form_data['email'])) {
         $form_errors->add('email', __('Email is not valid', 'custom-contact-form'));
     }
 
@@ -107,12 +108,18 @@ function custom_contact_form_validation($firstname, $lastname, $email, $subject,
 }
 
 
-function handle_contact_form($firstname, $lastname, $email, $subject, $message)
+function handle_contact_form($form_data)
 {
     global $config;
 
     $hubspot = new HubSpotIntegration($config);
-    $responseData = $hubspot->createContact($firstname, $lastname, $email, $message);
+    $responseData = $hubspot->createContact(
+        $form_data['firstname'],
+        $form_data['lastname'],
+        $form_data['email'],
+        $form_data['message']
+    );
+
 
     // Check response
     if (isset($responseData['id'])) {
@@ -125,19 +132,23 @@ function handle_contact_form($firstname, $lastname, $email, $subject, $message)
         echo '<strong>Sending mail!</strong>';
         echo '</div>';
         $mail = new EmailSender($config);
-        $mail_result = $mail->send($email, $subject, $message);
+        $mail_result = $mail->send(
+            $form_data['email'],
+            $form_data['subject'],
+            $form_data['message']
+        );
         echo $mail_result;
 
 
         if ($mail_result == 1) {
             // Add record to log messages if mail is sent
-            $log_message = "Email sent to $email. Subject: $subject, Message: $message";
+            $log_message = "Email sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
             error_log($log_message);
             echo '<div style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
             echo '<strong>Mail sent Successfully!</strong>';
             echo '</div>';
         } else {
-            $log_message = "Email not sent to $email. Subject: $subject, Message: $message";
+            $log_message = "Email not sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
             error_log($log_message);
             echo '<div style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
             echo '<strong>Error sending mail' . $mail_result . '!</strong>';
@@ -162,20 +173,20 @@ function handle_contact_form($firstname, $lastname, $email, $subject, $message)
 function custom_contact_form_function()
 {
     if (isset($_POST['submit'])) {
-        $firstname = sanitize_text_field($_POST['firstname']);
-        $lastname = sanitize_text_field($_POST['lastname']);
-        $email = sanitize_email($_POST['email']);
-        $subject = sanitize_text_field($_POST['subject']);
-        $message = sanitize_textarea_field($_POST['message']);
-
-
-        $form_errors = custom_contact_form_validation($firstname, $lastname, $email, $subject, $message);
+        $form_data = [
+            'firstname' => sanitize_text_field($_POST['firstname']),
+            'lastname' => sanitize_text_field($_POST['lastname']),
+            'email' => sanitize_email($_POST['email']),
+            'subject' => sanitize_text_field($_POST['subject']),
+            'message' => sanitize_text_field($_POST['message']),
+        ];
+        $form_errors = custom_contact_form_validation($form_data);
         if (!$form_errors->get_error_message()) {
-            // Create Contact at hubspot.com (implement HubSpot API integration here)
-            handle_contact_form($firstname, $lastname, $email, $subject, $message);
+            handle_contact_form($form_data);
         }
     }
-    custom_contact_form($firstname, $lastname, $email, $subject, $message);
+
+    custom_contact_form($form_data);
 }
 
 

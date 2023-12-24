@@ -1,12 +1,21 @@
 /* style.css */
+/* Use CSS variables for easier maintenance */
+:root {
+    --form-width: 400px;
+    --label-margin-bottom: 8px;
+    --input-padding: 8px;
+    --input-margin-bottom: 16px;
+    --button-bg-color: #0073e6;
+    --button-color: #fff;
+    --button-padding: 10px 20px;
+}
 
-/* Add your custom styles here */
 .custom-form {
-    max-width: 400px;
+    max-width: var(--form-width);
     margin: 0 auto;
 }
 
-.wrap h1{
+.custom-form h1 {
     text-align: center;
     justify-content: center;
     text-transform: uppercase;
@@ -15,23 +24,21 @@
 
 label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: var(--label-margin-bottom);
 }
 
 input[type="text"],
 input[type="email"],
 textarea {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 16px;
+    padding: var(--input-padding);
+    margin-bottom: var(--input-margin-bottom);
 }
 
 button {
-    background-color: #0073e6;
-    color: #fff;
-    padding: 10px 20px;
+    background-color: var(--button-bg-color);
+    color: var(--button-color);
+    padding: var(--button-padding);
     border: none;
     cursor: pointer;
 }
-
-/* Add more styles as needed */
