@@ -9,29 +9,30 @@ require __DIR__ . '/vendor/autoload.php';
 
 class EmailSender
 {
-    public static function send($config, $email, $subject, $message)
+    private $config;
+
+    public function __construct(array $config)
     {
-        // $headers = 'From: Adeniran John adeniranjohn2016@gmail.com' . "\r\n";
+        $this->config = $config;
+    }
 
-        // // Send mail
-        // $result = wp_mail($email, $subject, $message, $headers);
-        // return $result;
-
+    public function send(string $to, string $subject, string $message): bool
+    {
         $mail = new PHPMailer(true);
 
         $mail->isSMTP();
         $mail->SMTPAuth = true;
-        $mail->SMTPDebug = 3;
+        // $mail->SMTPDebug = 3;
 
-        $mail->Host = "smtp.gmail.com";
+        $mail->Host = $this->config['HOST'];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->Port = $this->config['POST'];
 
-        $mail->Username = $config['key']['EMAIL'];
-        $mail->Password = $config['key']['SMTP_PASSWORD'];
+        $mail->Username = $this->config['EMAIL'];
+        $mail->Password = $this->config['PASSWORD'];
 
-        $mail->setFrom($config['key']['EMAIL']);
-        $mail->addAddress($email);
+        $mail->setFrom($this->config['EMAIL']);
+        $mail->addAddress($to);
 
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -42,11 +43,11 @@ class EmailSender
                 return true;
             }
         } catch (Exception $th) {
-            return 'Error' . $th->getMessage();
+            throw new \Exception('Error sending email: ' . $th->getMessage());
         }
 
         $mail->smtpClose();
-    }
 
-    // Add other methods as needed
+        return false;
+    }
 }

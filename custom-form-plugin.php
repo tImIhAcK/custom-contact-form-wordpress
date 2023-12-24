@@ -110,7 +110,9 @@ function custom_contact_form_validation($firstname, $lastname, $email, $subject,
 function handle_contact_form($firstname, $lastname, $email, $subject, $message)
 {
     global $config;
-    $responseData = HubSpotIntegration::createContact($config, $firstname, $lastname, $email, $message);
+
+    $hubspot = new HubSpotIntegration($config);
+    $responseData = $hubspot->createContact($firstname, $lastname, $email, $message);
 
     // Check response
     if (isset($responseData['id'])) {
@@ -122,7 +124,8 @@ function handle_contact_form($firstname, $lastname, $email, $subject, $message)
         echo '<div style="background-color: #e6c400; color: white; padding: 15px; margin: 10px 0;">';
         echo '<strong>Sending mail!</strong>';
         echo '</div>';
-        $mail_result = EmailSender::send($config, $email, $subject, $message);
+        $mail = new EmailSender($config);
+        $mail_result = $mail->send($email, $subject, $message);
         echo $mail_result;
 
 
