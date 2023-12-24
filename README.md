@@ -23,7 +23,6 @@ To use the custom contact form, follow these steps:
 1. Create a `config.ini` file in the plugin directory with the following content:
 
    ```config.ini
-   [api_key]
    HUBSPOT_API_KEY=your_hubspot_api_key
    USERNAME=<youremail@gmail.com>
    PASSWORD=SMTP_PASSWORD
