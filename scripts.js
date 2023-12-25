@@ -1,24 +1,61 @@
 jQuery(document).ready(function ($) {
-  // $("#submit-btn").on("click", function (e) {
-  //   e.preventDefault();
-  //   alert("Form click");
-  //   // // Serialize form data
-  //   // var formData = $("#custom-contact-form").serialize();
-  //   // // Send Ajax request
-  //   // $.ajax({
-  //   //   type: "POST",
-  //   //   url: ajax_url, // Make sure to localize this variable in your main plugin file
-  //   //   data: {
-  //   //     action: "my_custom_form_submit",
-  //   //     formData: formData,
-  //   //   },
-  //   //   success: function (response) {
-  //   //     // Handle the Ajax response
-  //   //     alert(response); // You can replace this with your own logic
-  //   //   },
-  //   //   error: function (error) {
-  //   //     console.log(error);
-  //   //   },
-  //   // });
-  // });
+  $("#custom-contact-form").submit(function (event) {
+    event.preventDefault();
+    var formData = $(this).serialize();
+    console.log(formData);
+
+    $.ajax({
+      url: ajax_object.ajax_url,
+      method: "POST",
+      data: formData,
+      beforeSend: function () {
+        var formResponseDiv = $("#form-response");
+
+        message = '<div class="info">Working...</div>';
+        formResponseDiv.html(message);
+
+        setTimeout(function () {
+          formResponseDiv.html("");
+        }, 10000);
+      },
+      success: function (response) {
+        console.log(response);
+        handleFormResponse(response);
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("AJAX error:", textStatus, errorThrown);
+      },
+    });
+  });
+
+  function handleFormResponse(response) {
+    var formResponseDiv = $("#form-response");
+    var message = "";
+
+    if (response.data) {
+      if (response.data.status === true) {
+        message =
+          "<div class=" +
+          response.data.class +
+          ">" +
+          response.data.message +
+          "</div>";
+      } else {
+        message =
+          "<div class=" +
+          response.data.class +
+          ">" +
+          response.data.message +
+          "</div>";
+      }
+    } else {
+      message = '<div class="danger">An unexpected error occurred.</div>';
+    }
+
+    formResponseDiv.html(message);
+
+    setTimeout(function () {
+      formResponseDiv.html("");
+    }, 10000);
+  }
 });

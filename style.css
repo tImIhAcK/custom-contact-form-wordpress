@@ -42,3 +42,15 @@ button {
     border: none;
     cursor: pointer;
 }
+
+.success {
+    background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;
+}
+
+.danger {
+    background-color: #e50d0d; color: white; padding: 15px; margin: 10px 0;
+}
+
+.info {
+    background-color: #e3af36; color: white; padding: 15px; margin: 10px 0;
+}

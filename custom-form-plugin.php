@@ -34,10 +34,8 @@ function custom_contact_form_menu()
     );
 
     add_action('admin_enqueue_scripts', 'custom_contact_form_enqueue_styles');
-    // add_action('wp_enqueue_scripts', 'custom_contact_form_enqueue_scripts');
+    add_action('wp_enqueue_scripts', 'custom_contact_form_enqueue_scripts'); // Enqueue scripts in the front-end
     add_action('init', array('Custom Form', 'init'));
-
-    echo '<input type="hidden" id="custom_contact_form_nonce" name="custom_contact_form_nonce" value="' . wp_create_nonce('custom_contact_form_nonce') . '" />';
 }
 
 // Enqueue CSS function
@@ -46,28 +44,22 @@ function custom_contact_form_enqueue_styles()
     wp_enqueue_style('custom-contact-form-styles', plugins_url('style.css', __FILE__));
 }
 
-// function custom_contact_form_enqueue_scripts()
-// {
-//     wp_enqueue_script('jquery');
-//     wp_enqueue_script('custom-contact-form-scripts', plugins_url('scripts.js', __FILE__), array('jquery'), null, true);
-// }
-
-
+function custom_contact_form_enqueue_scripts()
+{
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('custom-contact-form-scripts', plugins_url('scripts.js', __FILE__), array('jquery'), null, true);
+    wp_localize_script('custom-contact-form-scripts', 'ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
+}
 
 // Settings page
 function custom_contact_form_settings()
 {
+    include_once __DIR__ . "/views/custom-form.php";
+    custom_contact_form_enqueue_scripts();
     custom_contact_form_shortcode();
 }
 
-// ...
-
-function custom_contact_form($form_data)
-{
-    include_once __DIR__ . "/views/custom-form.php";
-}
-
-// INput validation function 
+// Input validation function
 function custom_contact_form_validation($form_data)
 {
     $form_errors = new WP_Error;
@@ -79,17 +71,7 @@ function custom_contact_form_validation($form_data)
         $form_errors->add('email', __('Email is not valid', 'custom-contact-form'));
     }
 
-    if (is_wp_error($form_errors)) {
-        foreach ($form_errors->get_error_messages() as $error) {
-            echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
-            echo '<strong>' . $error . '</strong>';
-            echo '</div>';
-
-            timeout_message();
-        }
-    }
-
-    return $form_errors;
+    return $form_errors->get_error_messages();
 }
 
 
@@ -105,18 +87,8 @@ function handle_contact_form($form_data)
         $form_data['message']
     );
 
-
     // Check response
     if (isset($responseData['id'])) {
-        echo '<div id="status-message" style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
-        echo '<strong>Contact Created Successfully!</strong>';
-        echo '</div>';
-
-
-        echo '<div id="status-message" style="background-color: #e6c400; color: white; padding: 15px; margin: 10px 0;">';
-        echo '<strong>Sending mail!</strong>';
-        echo '</div>';
-
         $mail = new EmailSender($config);
         $mail_result = $mail->send(
             $form_data['email'],
@@ -125,56 +97,42 @@ function handle_contact_form($form_data)
         );
 
         if ($mail_result === true) {
-            // Add record to log messages if mail is sent
-            $log_message = "Email sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
-            error_log($log_message);
-            echo '<div id="status-message" style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
-            echo '<strong>Mail sent Successfully!</strong>';
-            echo '</div>';
-
-            timeout_message();
+            error_log("Email sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}");
+            return array("data" => array(
+                "status" => true,
+                "class" => "success",
+                "message" => "Contact created successfully and email sent!"
+            ));
         } else {
-            $log_message = "Email not sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
-            error_log($log_message);
-            echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
-            echo '<strong>' . $mail_result . '!</strong>';
-            echo '</div>';
-
-            timeout_message();
+            error_log("Email not sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}");
+            return array("data" => array(
+                "status" => false,
+                "class" => "danger",
+                "message" => "Contact created successfully, but email failed to send."
+            ));
         }
-    } else if (isset($responseData['status']) && $responseData['status'] === 'error') {
+    } elseif (isset($responseData['status']) && $responseData['status'] === 'error') {
         $message = explode('.', $responseData['message']);
         $message = $message[0];
 
-        echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
-        echo "<strong>Error creating contact: " . trim($message) . "</strong>";
-        echo '</div>';
-
-        timeout_message();
+        return array("data" => array(
+            "status" => false,
+            "class" => "danger",
+            "message" => "Failed to create contact in HubSpot." . trim($message)
+        ));
     } else {
-        // Unknown error
-        echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
-        echo "Error creating HubSpot contact";
-        echo '</div>';
-        timeout_message();
+        return array("data" => array(
+            "status" => false,
+            "class" => "danger",
+            "message" => "Error creating contact in HubSpot."
+        ));
     }
 }
 
-function timeout_message()
-{
-    echo '<script>
-    setTimeout(function(){
-        elements = document.getElementById("status-message");
-            elements.style.display = "none";
-
-    }, 5000); // Adjust the delay in milliseconds (e.g., 5000ms for 5 seconds)
-</script>';
-}
-
-
 function custom_contact_form_function()
 {
-    if (isset($_POST['submit'])) {
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $form_data = [
             'firstname' => sanitize_text_field($_POST['firstname']),
             'lastname' => sanitize_text_field($_POST['lastname']),
@@ -182,14 +140,26 @@ function custom_contact_form_function()
             'subject' => sanitize_text_field($_POST['subject']),
             'message' => sanitize_text_field($_POST['message']),
         ];
+
         $form_errors = custom_contact_form_validation($form_data);
-        if (!$form_errors->get_error_message()) {
-            handle_contact_form($form_data);
+
+        if (!$form_errors) {
+            header('Content-Type: application/json');
+            $response = handle_contact_form($form_data);
+            echo json_encode($response);
+            exit;
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(array("data" => array("status" => false, "class" => "danger", "message" => $form_errors)));
+            exit;
         }
     }
-
-    custom_contact_form($form_data);
 }
+
+
+add_action('wp_ajax_custom_contact_form', 'custom_contact_form_function');
+add_action('wp_ajax_nopriv_custom_contact_form', 'custom_contact_form_function');
+
 
 
 // Register a new shortcode: [cr_custom_contact_form]
