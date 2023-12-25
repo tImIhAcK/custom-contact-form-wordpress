@@ -2,13 +2,16 @@ jQuery(document).ready(function ($) {
   $("#custom-contact-form").submit(function (event) {
     event.preventDefault();
     var formData = $(this).serialize();
-    console.log(formData);
+    // console.log(formData);
+    var submitButton = $("#custom-contact-form button");
 
     $.ajax({
       url: ajax_object.ajax_url,
       method: "POST",
       data: formData,
       beforeSend: function () {
+        submitButton.prop("disabled", true);
+
         var formResponseDiv = $("#form-response");
 
         message = '<div class="info">Working...</div>';
@@ -24,6 +27,9 @@ jQuery(document).ready(function ($) {
       },
       error: function (jqXHR, textStatus, errorThrown) {
         console.error("AJAX error:", textStatus, errorThrown);
+      },
+      complete: function () {
+        submitButton.prop("disabled", false);
       },
     });
   });

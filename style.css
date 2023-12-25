@@ -1,47 +1,69 @@
-/* style.css */
-/* Use CSS variables for easier maintenance */
-:root {
-    --form-width: 400px;
-    --label-margin-bottom: 8px;
-    --input-padding: 8px;
-    --input-margin-bottom: 16px;
-    --button-bg-color: #0073e6;
-    --button-color: #fff;
-    --button-padding: 10px 20px;
-}
+/* body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+} */
 
 .custom-form {
-    max-width: var(--form-width);
+    width: 600px;
     margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
 }
 
-.custom-form h1 {
-    text-align: center;
-    justify-content: center;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
-
-label {
-    display: block;
-    margin-bottom: var(--label-margin-bottom);
-}
-
-input[type="text"],
-input[type="email"],
-textarea {
-    width: 100%;
-    padding: var(--input-padding);
-    margin-bottom: var(--input-margin-bottom);
-}
-
-button {
-    background-color: var(--button-bg-color);
-    color: var(--button-color);
-    padding: var(--button-padding);
+.custom-form fieldset {
     border: none;
-    cursor: pointer;
+    padding: 6px 0;
 }
+
+.custom-form label {
+    display: block;
+    padding: 4px 0;
+    color: #555;
+}
+
+.custom-form input[type="text"],
+.custom-form textarea {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.custom-form textarea {
+    resize: vertical;
+}
+
+.custom-form button[type="submit"] {
+    width: 100%;
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+.custom-form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+
+#form-response {
+    margin-top: 16px;
+}
+
 
 .success {
     background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;

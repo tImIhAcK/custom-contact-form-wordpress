@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Custom Contact Form
-Description: This plugin allows you to create a custom form.
+Description: This plugin allows you to create a Contact on Hubspot and Send a Mail.
 Version: 1.0
-Author Name: Adeniran John
+Author: Adeniran John
 Author Email: adeniranjohn2016@gmail.com
 */
 
