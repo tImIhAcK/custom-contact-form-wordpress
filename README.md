@@ -8,6 +8,7 @@ Custom Contact Form is a WordPress plugin that allows you to create a custom for
 2. Upload the entire `custom-contact-form` directory to the `wp-content/plugins/` directory of your WordPress installation.
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 4. Create a Contact in HubSpot Private App.
+5. Download PHPMailer using `composer require phpmailer/phpmailer`.
 
 ## Usage
 
