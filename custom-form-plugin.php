@@ -34,7 +34,10 @@ function custom_contact_form_menu()
     );
 
     add_action('admin_enqueue_scripts', 'custom_contact_form_enqueue_styles');
+    // add_action('wp_enqueue_scripts', 'custom_contact_form_enqueue_scripts');
     add_action('init', array('Custom Form', 'init'));
+
+    echo '<input type="hidden" id="custom_contact_form_nonce" name="custom_contact_form_nonce" value="' . wp_create_nonce('custom_contact_form_nonce') . '" />';
 }
 
 // Enqueue CSS function
@@ -43,12 +46,17 @@ function custom_contact_form_enqueue_styles()
     wp_enqueue_style('custom-contact-form-styles', plugins_url('style.css', __FILE__));
 }
 
+// function custom_contact_form_enqueue_scripts()
+// {
+//     wp_enqueue_script('jquery');
+//     wp_enqueue_script('custom-contact-form-scripts', plugins_url('scripts.js', __FILE__), array('jquery'), null, true);
+// }
+
+
 
 // Settings page
 function custom_contact_form_settings()
 {
-
-    // Output admin page HTML
     custom_contact_form_shortcode();
 }
 
@@ -56,33 +64,8 @@ function custom_contact_form_settings()
 
 function custom_contact_form($form_data)
 {
-    echo '
-    
-    <div class="custom-form">
-         <h1>' . __('Contact', 'custom-contact-form') . '</h1>
-        <form action="' . $_SERVER['REQUEST_URI'] . '" method="post">
-            <input type="hidden" name="action" value="my_custom_form_submit">
-            <label for="first_name">' . esc_html__('First Name:', 'custom-contact-form') . '</label>
-            <input type="text" id="first_name" name="firstname" value="' . esc_attr(isset($_POST['firstname']) ? $form_data['firstname'] : null) . '">
-            <br>
-            <label for="last_name">' . esc_html__('Last Name:', 'custom-contact-form') . '</label>
-            <input type="text" id="last_name" name="lastname" value="' . esc_attr(isset($_POST['lastname']) ? $form_data['lastname'] : null) . '">
-            <br>
-            <label for="email">' . esc_html__('E-mail:', 'custom-contact-form') . '</label>
-            <input type="text" id="email" name="email" value="' . esc_attr(isset($_POST['email']) ? $form_data['email'] : null) . '">
-            <br>
-            <label for="subject">' . esc_html__('Subject:', 'custom-contact-form') . '</label>
-            <input type="text" id="subject" name="subject" value="' . esc_attr(isset($_POST['subject']) ? $form_data['subject'] : null) . '">
-            <br>
-            <label for="message">' . esc_html__('Message:', 'custom-contact-form') . '</label>
-            <textarea id="message" name="message">' . esc_textarea(isset($_POST['message']) ? $form_data['message'] : null) . '</textarea>
-            <br>
-           <button type="submit" name="submit">' . esc_html__('Submit', 'custom-contact-form') . '</button>
-        </form>
-    </div>';
+    include_once __DIR__ . "/views/custom-form.php";
 }
-// Add Ajax to hanble the form
-
 
 // INput validation function 
 function custom_contact_form_validation($form_data)
@@ -98,9 +81,11 @@ function custom_contact_form_validation($form_data)
 
     if (is_wp_error($form_errors)) {
         foreach ($form_errors->get_error_messages() as $error) {
-            echo '<div style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
+            echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
             echo '<strong>' . $error . '</strong>';
             echo '</div>';
+
+            timeout_message();
         }
     }
 
@@ -123,50 +108,67 @@ function handle_contact_form($form_data)
 
     // Check response
     if (isset($responseData['id'])) {
-        echo '<div style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
+        echo '<div id="status-message" style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
         echo '<strong>Contact Created Successfully!</strong>';
         echo '</div>';
 
 
-        echo '<div style="background-color: #e6c400; color: white; padding: 15px; margin: 10px 0;">';
+        echo '<div id="status-message" style="background-color: #e6c400; color: white; padding: 15px; margin: 10px 0;">';
         echo '<strong>Sending mail!</strong>';
         echo '</div>';
+
         $mail = new EmailSender($config);
         $mail_result = $mail->send(
             $form_data['email'],
             $form_data['subject'],
             $form_data['message']
         );
-        echo $mail_result;
 
-
-        if ($mail_result == 1) {
+        if ($mail_result === true) {
             // Add record to log messages if mail is sent
             $log_message = "Email sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
             error_log($log_message);
-            echo '<div style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
+            echo '<div id="status-message" style="background-color: #4CAF50; color: white; padding: 15px; margin: 10px 0;">';
             echo '<strong>Mail sent Successfully!</strong>';
             echo '</div>';
+
+            timeout_message();
         } else {
             $log_message = "Email not sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}";
             error_log($log_message);
-            echo '<div style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
-            echo '<strong>Error sending mail' . $mail_result . '!</strong>';
+            echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
+            echo '<strong>' . $mail_result . '!</strong>';
             echo '</div>';
+
+            timeout_message();
         }
     } else if (isset($responseData['status']) && $responseData['status'] === 'error') {
         $message = explode('.', $responseData['message']);
         $message = $message[0];
 
-        echo '<div style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
+        echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
         echo "<strong>Error creating contact: " . trim($message) . "</strong>";
         echo '</div>';
+
+        timeout_message();
     } else {
         // Unknown error
-        echo '<div style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
+        echo '<div id="status-message" style="background-color: #f44336; color: white; padding: 15px; margin: 10px 0;">';
         echo "Error creating HubSpot contact";
         echo '</div>';
+        timeout_message();
     }
+}
+
+function timeout_message()
+{
+    echo '<script>
+    setTimeout(function(){
+        elements = document.getElementById("status-message");
+            elements.style.display = "none";
+
+    }, 5000); // Adjust the delay in milliseconds (e.g., 5000ms for 5 seconds)
+</script>';
 }
 
 

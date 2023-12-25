@@ -16,22 +16,23 @@ class EmailSender
         $this->config = $config;
     }
 
-    public function send(string $to, string $subject, string $message): bool
+    public function send(string $to, string $subject, string $message)
     {
         $mail = new PHPMailer(true);
 
         $mail->isSMTP();
         $mail->SMTPAuth = true;
-        // $mail->SMTPDebug = 3;
 
         $mail->Host = $this->config['HOST'];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = $this->config['POST'];
+        $mail->Port = $this->config['PORT'];
 
-        $mail->Username = $this->config['EMAIL'];
+        $mail->Username = $this->config['USERNAME'];
         $mail->Password = $this->config['PASSWORD'];
 
-        $mail->setFrom($this->config['EMAIL']);
+        // $mail->SMTPDebug = 3;
+
+        $mail->setFrom($this->config['USERNAME']);
         $mail->addAddress($to);
 
         $mail->isHTML(true);
@@ -43,11 +44,7 @@ class EmailSender
                 return true;
             }
         } catch (Exception $th) {
-            throw new \Exception('Error sending email: ' . $th->getMessage());
+            return 'Error sending email: ' . $th->getMessage();
         }
-
-        $mail->smtpClose();
-
-        return false;
     }
 }
