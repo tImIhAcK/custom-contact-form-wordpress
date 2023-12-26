@@ -107,7 +107,7 @@ function handle_contact_form($form_data)
             error_log("Email not sent to {$form_data['email']}. Subject: {$form_data['subject']}, Message: {$form_data['message']}");
             return array("data" => array(
                 "status" => false,
-                "class" => "danger",
+                "class" => "info",
                 "message" => "Contact created successfully, but email failed to send."
             ));
         }

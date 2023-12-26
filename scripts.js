@@ -4,6 +4,7 @@ jQuery(document).ready(function ($) {
     var formData = $(this).serialize();
     // console.log(formData);
     var submitButton = $("#custom-contact-form button");
+    var formResponseDiv = $("#form-response");
 
     $.ajax({
       url: ajax_object.ajax_url,
@@ -11,18 +12,11 @@ jQuery(document).ready(function ($) {
       data: formData,
       beforeSend: function () {
         submitButton.prop("disabled", true);
-
-        var formResponseDiv = $("#form-response");
-
         message = '<div class="info">Working...</div>';
         formResponseDiv.html(message);
-
-        setTimeout(function () {
-          formResponseDiv.html("");
-        }, 10000);
       },
       success: function (response) {
-        console.log(response);
+        // console.log(response);
         handleFormResponse(response);
       },
       error: function (jqXHR, textStatus, errorThrown) {
@@ -30,6 +24,9 @@ jQuery(document).ready(function ($) {
       },
       complete: function () {
         submitButton.prop("disabled", false);
+        setTimeout(function () {
+          formResponseDiv.html("");
+        }, 10000);
       },
     });
   });
